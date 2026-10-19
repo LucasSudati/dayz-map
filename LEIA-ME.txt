@@ -1,0 +1,16 @@
+DAYZ TACTICAL MAP — PROTÓTIPO 0.1
+
+Abra index.html em um navegador moderno.
+
+INCLUÍDO:
+- Interface escura
+- Camadas locais visíveis/ocultas
+- Marcadores com ícones
+- Rotas desenhadas por cliques
+- Zoom, panorâmica e consulta de coordenadas de teste
+- Persistência no navegador e exportação JSON
+
+IMPORTANTE:
+A grade e a faixa 0–15360 são ilustrações técnicas; não foram calibradas com uma imagem oficial de Chernarus ou com o GPS real do DayZ. Não use para navegação dentro do jogo.
+NÃO há ainda Supabase, usuários, senha de grupo ou compartilhamento.
+Próximas etapas: fonte cartográfica com licença adequada, pontos de referência para calibração GPS, testes de conversão e backend com Auth + RLS.
