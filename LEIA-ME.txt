@@ -1,7 +1,5 @@
 DAYZ TACTICAL MAP — PROTÓTIPO 0.1
 
-Abra index.html em um navegador moderno.
-
 INCLUÍDO:
 - Interface escura
 - Camadas locais visíveis/ocultas
