@@ -1,0 +1,374 @@
+/* Defino as cores e a tipografia base da interface escura. */
+:root {
+  font-family:Inter,system-ui,Arial;
+  background:#191b20;
+  color:#e5e8ef
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0
+}
+/* Organizo o cabeçalho fixo e a área principal do editor. */
+header {
+  height:60px;
+  background:#22252c;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+  border-bottom:1px solid #373a44
+}
+header strong {
+  color:#a5bde9
+}
+small,.muted {
+  color:#aab0bf
+}
+main {
+  display:flex;
+  height:calc(100vh - 60px);
+  min-height:500px;
+  position:relative
+}
+/* Reservo o painel lateral para camadas, marcadores e ferramentas. */
+aside {
+  width:310px;
+  flex:none;
+  padding:18px;
+  background:#23262e;
+  overflow:auto;
+  border-right:1px solid #3c404b
+}
+h2 {
+  font-size:14px;
+  letter-spacing:.09em;
+  color:#b9c8e7;
+  text-transform:uppercase;
+  margin:22px 0 12px
+}
+label {
+  display:block;
+  font-size:12px;
+  color:#b9c1d1;
+  margin:10px 0 5px
+}
+input,select,button {
+  background:#303541;
+  border:1px solid #4a5161;
+  color:#eef1f7;
+  border-radius:7px;
+  padding:10px;
+  font:inherit;
+  font-size:13px
+}
+input,select {
+  width:100%
+}
+button {
+  cursor:pointer
+}
+button:hover {
+  background:#414a5e
+}
+input[type=color] {
+  height:38px;
+  padding:3px;
+  min-width:55px
+}
+.edit-item {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:6px 0;
+  padding:6px;
+  border:1px solid #404652;
+  border-radius:7px;
+  font-size:12px
+}
+.edit-item .label {
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap
+}
+.edit-item input[type=color] {
+  width:52px;
+  flex:none
+}
+.edit-item button {
+  padding:6px
+}
+.primary {
+  background:#3b567f;
+  border-color:#597fb1
+}
+.row {
+  display:flex;
+  gap:8px
+}
+.row>* {
+  flex:1;
+  min-width:0
+}
+.layer {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  border:1px solid #404652;
+  padding:8px;
+  border-radius:8px;
+  margin-bottom:8px;
+  font-size:13px
+}
+.layer input {
+  width:auto
+}
+.layer .name {
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+.layer .delete {
+  flex:0;
+  padding:4px 8px
+}
+/* Faço a janela do mapa aceitar arrasto e gestos de toque. */
+#viewport {
+  position:relative;
+  flex:1;
+  overflow:hidden;
+  background:#121419;
+  cursor:grab;
+  touch-action:none
+}
+#viewport.dragging {
+  cursor:grabbing
+}
+/* Desenho uma grade ilustrativa; ela não equivale a cartografia calibrada. */
+#world {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:800px;
+  height:800px;
+  transform-origin:center center;
+  background-color:#282e37;
+  background-image:linear-gradient(#e4eff318 1px,transparent 1px),linear-gradient(90deg,#e4eff318 1px,transparent 1px),radial-gradient(circle at 60% 35%,#40515a33,transparent 40%);
+  background-size:52.08333px 52.08333px,52.08333px 52.08333px,100% 100%;
+  border:2px solid #8298ad;
+  box-shadow:0 10px 80px #0009;
+  user-select:none
+}
+#world.has-map:before {
+  display:none
+}
+#world.has-map {
+  background-image:none
+}
+#world:before {
+  content:'GRADE DE TESTE — NÃO É UM MAPA CALIBRADO DE CHERNARUS';
+  position:absolute;
+  top:20px;
+  left:12%;
+  width:76%;
+  color:#e9c99d;
+  text-align:center;
+  font-size:12px;
+  letter-spacing:.07em;
+  pointer-events:none
+}
+/* Sobreponho rotas e marcadores ao fundo sem interceptar cliques da grade. */
+#markers,#lines {
+  position:absolute;
+  inset:0;
+  overflow:visible;
+  pointer-events:none
+}
+#baseMap {
+  z-index:0
+}
+#lines {
+  z-index:1
+}
+#markers {
+  z-index:2
+}
+/* Posiciono os marcadores no plano e mantenho seus rótulos no hover. */
+.pin {
+  position:absolute;
+  transform:translate(-50%,-100%);
+  border:1px solid #d7dde6;
+  border-radius:30px;
+  background:#1b2535e8;
+  color:#fff;
+  min-width:30px;
+  height:30px;
+  padding:4px 8px;
+  text-align:center;
+  line-height:20px;
+  cursor:pointer;
+  box-shadow:0 4px 8px #0008
+}
+.pin:hover {
+  outline:2px solid #a9badc
+}
+.pin span {
+  display:none;
+  position:absolute;
+  left:50%;
+  bottom:35px;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  background:#111922;
+  padding:6px 9px;
+  border-radius:6px
+}
+.pin:hover span {
+  display:block
+}
+#toolbar {
+  position:absolute;
+  right:16px;
+  top:16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px
+}
+#status {
+  position:absolute;
+  bottom:15px;
+  right:15px;
+  background:#171b24de;
+  border:1px solid #505866;
+  padding:10px;
+  border-radius:8px;
+  font-size:13px
+}
+#notice {
+  position:absolute;
+  bottom:15px;
+  left:15px;
+  font-size:12px;
+  max-width:440px;
+  background:#171b24d9;
+  padding:10px;
+  border-radius:8px;
+  color:#ddd
+}
+.dot {
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+  background:#81a4cf
+}
+.info {
+  font-size:12px;
+  line-height:1.5;
+  color:#aeb9cb
+}
+.tiny {
+  padding:6px
+}
+hr {
+  border:0;
+  border-top:1px solid #373b45;
+  margin:18px 0
+}
+/* Adapto o layout às telas estreitas. */
+@media(max-width:760px) {
+  main {
+    flex-direction:column
+  }
+  aside {
+    width:100%;
+    height:45vh
+  }
+  #viewport {
+    min-height:55vh
+  }
+  header {
+    padding:0 10px
+  }
+}
+#quick {
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:10;
+  display:flex;
+  gap:6px
+}
+#quick button {
+  background:#1b2434e8;
+  box-shadow:0 3px 9px #0009
+}
+#context {
+  display:none;
+  position:absolute;
+  z-index:30;
+  background:#202631ee;
+  border:1px solid #536079;
+  border-radius:10px;
+  padding:6px;
+  box-shadow:0 8px 24px #0009;
+  min-width:185px
+}
+#context button {
+  display:block;
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent
+}
+#context button:hover {
+  background:#38465c
+}
+main.compact aside {
+  display:none
+}
+main.compact #viewport {
+  width:100%
+}
+@media(max-width:760px) {
+  #quick {
+    top:8px;
+    left:8px
+  }
+}
+.pin {
+  width:34px;
+  height:44px;
+  min-width:0;
+  padding:0;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent!important
+}
+.pin svg {
+  width:34px;
+  height:44px;
+  filter:drop-shadow(0 4px 3px #0009)
+}
+.pin span {
+  bottom:46px
+}
+#palette {
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:5px;
+  margin:8px 0
+}
+#palette button {
+  height:28px;
+  padding:0;
+  border:2px solid transparent
+}
+#palette button.active {
+  border-color:white
+}
+/* As regras seguintes refinam a barra rápida, o menu contextual e os ícones SVG. */
