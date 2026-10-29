@@ -1,7 +1,5 @@
 # dayz-map
 
-README inicial para registrar o estado do repositório. Descrição técnica e instruções de uso ainda precisam ser documentadas.
-
 ---
 
 ### Status e atualização do projeto
