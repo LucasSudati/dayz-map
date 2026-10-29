@@ -1,45 +1,569 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DayZ Tactical Map • Protótipo 0.5.1</title><!-- Mantenho o estilo junto do protótipo para permitir execução sem dependências. -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DayZ Tactical Map • Protótipo 0.5.1</title>
+<!-- Mantenho o estilo junto do protótipo para permitir execução sem dependências. -->
 <style>
 /* Defino as cores e a tipografia base da interface escura. */
-:root{font-family:Inter,system-ui,Arial;background:#191b20;color:#e5e8ef}*{box-sizing:border-box}body{margin:0}/* Organizo o cabeçalho fixo e a área principal do editor. */
-header{height:60px;background:#22252c;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #373a44}header strong{color:#a5bde9}small,.muted{color:#aab0bf}main{display:flex;height:calc(100vh - 60px);min-height:500px;position:relative}/* Reservo o painel lateral para camadas, marcadores e ferramentas. */
-aside{width:310px;flex:none;padding:18px;background:#23262e;overflow:auto;border-right:1px solid #3c404b}h2{font-size:14px;letter-spacing:.09em;color:#b9c8e7;text-transform:uppercase;margin:22px 0 12px}label{display:block;font-size:12px;color:#b9c1d1;margin:10px 0 5px}input,select,button{background:#303541;border:1px solid #4a5161;color:#eef1f7;border-radius:7px;padding:10px;font:inherit;font-size:13px}input,select{width:100%}button{cursor:pointer}button:hover{background:#414a5e}input[type=color]{height:38px;padding:3px;min-width:55px}.edit-item{display:flex;align-items:center;gap:6px;margin:6px 0;padding:6px;border:1px solid #404652;border-radius:7px;font-size:12px}.edit-item .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.edit-item input[type=color]{width:52px;flex:none}.edit-item button{padding:6px}.primary{background:#3b567f;border-color:#597fb1}.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}.layer{display:flex;align-items:center;gap:9px;border:1px solid #404652;padding:8px;border-radius:8px;margin-bottom:8px;font-size:13px}.layer input{width:auto}.layer .name{flex:1;overflow:hidden;text-overflow:ellipsis}.layer .delete{flex:0;padding:4px 8px}/* Faço a janela do mapa aceitar arrasto e gestos de toque. */
-#viewport{position:relative;flex:1;overflow:hidden;background:#121419;cursor:grab;touch-action:none}#viewport.dragging{cursor:grabbing}/* Desenho uma grade ilustrativa; ela não equivale a cartografia calibrada. */
-#world{position:absolute;left:50%;top:50%;width:800px;height:800px;transform-origin:center center;background-color:#282e37;background-image:linear-gradient(#e4eff318 1px,transparent 1px),linear-gradient(90deg,#e4eff318 1px,transparent 1px),radial-gradient(circle at 60% 35%,#40515a33,transparent 40%);background-size:52.08333px 52.08333px,52.08333px 52.08333px,100% 100%;border:2px solid #8298ad;box-shadow:0 10px 80px #0009;user-select:none}#world.has-map:before{display:none}#world.has-map{background-image:none}#world:before{content:'GRADE DE TESTE — NÃO É UM MAPA CALIBRADO DE CHERNARUS';position:absolute;top:20px;left:12%;width:76%;color:#e9c99d;text-align:center;font-size:12px;letter-spacing:.07em;pointer-events:none}/* Sobreponho rotas e marcadores ao fundo sem interceptar cliques da grade. */
-#markers,#lines{position:absolute;inset:0;overflow:visible;pointer-events:none}#baseMap{z-index:0}#lines{z-index:1}#markers{z-index:2}/* Posiciono os marcadores no plano e mantenho seus rótulos no hover. */
-.pin{position:absolute;transform:translate(-50%,-100%);border:1px solid #d7dde6;border-radius:30px;background:#1b2535e8;color:#fff;min-width:30px;height:30px;padding:4px 8px;text-align:center;line-height:20px;cursor:pointer;box-shadow:0 4px 8px #0008}.pin:hover{outline:2px solid #a9badc}.pin span{display:none;position:absolute;left:50%;bottom:35px;transform:translateX(-50%);white-space:nowrap;background:#111922;padding:6px 9px;border-radius:6px}.pin:hover span{display:block}#toolbar{position:absolute;right:16px;top:16px;display:flex;flex-direction:column;gap:8px}#status{position:absolute;bottom:15px;right:15px;background:#171b24de;border:1px solid #505866;padding:10px;border-radius:8px;font-size:13px}#notice{position:absolute;bottom:15px;left:15px;font-size:12px;max-width:440px;background:#171b24d9;padding:10px;border-radius:8px;color:#ddd}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;background:#81a4cf}.info{font-size:12px;line-height:1.5;color:#aeb9cb}.tiny{padding:6px}hr{border:0;border-top:1px solid #373b45;margin:18px 0}/* Adapto o layout às telas estreitas. */
-@media(max-width:760px){main{flex-direction:column}aside{width:100%;height:45vh}#viewport{min-height:55vh}header{padding:0 10px}}
-#quick{position:absolute;top:12px;left:12px;z-index:10;display:flex;gap:6px}#quick button{background:#1b2434e8;box-shadow:0 3px 9px #0009}#context{display:none;position:absolute;z-index:30;background:#202631ee;border:1px solid #536079;border-radius:10px;padding:6px;box-shadow:0 8px 24px #0009;min-width:185px}#context button{display:block;width:100%;text-align:left;border:0;background:transparent}#context button:hover{background:#38465c}main.compact aside{display:none}main.compact #viewport{width:100%}@media(max-width:760px){#quick{top:8px;left:8px}}.pin{width:34px;height:44px;min-width:0;padding:0;border:none;border-radius:0;box-shadow:none;background:transparent!important}.pin svg{width:34px;height:44px;filter:drop-shadow(0 4px 3px #0009)}.pin span{bottom:46px}#palette{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:8px 0}#palette button{height:28px;padding:0;border:2px solid transparent}#palette button.active{border-color:white}/* As regras seguintes refinam a barra rápida, o menu contextual e os ícones SVG. */
-</style></head><body><!-- Identifico a versão do protótipo e aviso que o mapa é de ensaio. -->
-<header><div><strong>DAYZ / TACTICAL MAP</strong> <small>— protótipo 0.5.1</small></div><small>CHERNARUS · grade de ensaio</small></header><main id="layout" class="compact"><!-- Reúno as ferramentas de edição no painel lateral. -->
-<aside><div class="info">Protótipo local para validar a interface. A grade usa uma escala <b>ilustrativa</b> de 0–15360 nos dois eixos; <b>não utilize os valores para navegar no jogo</b> até calibrarmos a cartografia.</div><h2>Imagem de Chernarus (prévia)</h2><input type="file" accept="image/png,image/jpeg,image/webp" id="mapFile"><button id="clearMap" style="margin-top:6px;width:100%">Voltar à grade de teste</button><p class="info">Selecione uma imagem do mapa no seu computador. Ela será exibida apenas neste navegador e não será enviada ao GitHub. Posição e escala da imagem ainda não estão calibradas: não use para navegação real.</p><h2>Localizar coordenadas</h2><div class="row"><div><label for="x">X → direita (teste)</label><input type="number" id="x" min="0" max="15360" value="7680"></div><div><label for="y">Y ↓ baixo (teste)</label><input type="number" id="y" min="0" max="15360" value="7680"></div></div><button class="primary" style="margin-top:8px;width:100%" id="go">Centralizar posição</button><h2>Camadas</h2><div id="layers"></div><div class="row"><input id="newLayer" placeholder="Nome da camada" maxlength="32"><button id="addLayer" aria-label="Criar camada">+ Criar</button></div><p class="info">As camadas são locais neste protótipo. Ainda não há senhas, usuários ou compartilhamento seguro.</p><h2>Novo marcador</h2><label for="markerName">Nome</label><input id="markerName" placeholder="Ex.: Barril escondido" maxlength="80"><div class="row"><div><label for="icon">Ícone</label><select id="icon"><option value="home">Casa</option><option value="player">Jogador</option><option value="car">Carro</option><option value="motorcycle">Moto</option><option value="target">Alvo</option><option value="supply">Suprimentos</option><option value="water">Água</option><option value="warning">Perigo</option><option value="meet">Encontro</option><option value="pin">Localização</option></select></div><div><label for="targetLayer">Camada</label><select id="targetLayer"></select></div></div><label>Paleta (10 cores)</label><div id="palette"></div><div class="row" style="display:none"><div><label for="markerBorder">Cor da borda</label><input type="color" id="markerBorder" value="#d7dde6"></div><div><label for="markerBg">Fundo do ícone</label><input type="color" id="markerBg" value="#1b2535"></div></div><button class="primary" style="width:100%;margin-top:10px" id="addMarker">Adicionar nas coordenadas</button><p class="info">Clique no mapa para capturar a posição do próximo marcador. Coordenadas ainda ilustrativas.</p><div id="markerEditors"></div><h2>Rotas</h2><div class="row"><div><label for="routeColor">Cor da linha</label><input type="color" id="routeColor" value="#96badd"></div><div><label for="routeWidth">Espessura</label><input type="number" min="1" max="12" id="routeWidth" value="1"></div></div><button id="route">Começar rota (clique no mapa)</button> <button id="endRoute">Finalizar rota</button><p class="info">Clique no mapa para adicionar pontos à rota. Os pontos ficam na camada selecionada.</p><div id="routeEditors"></div><hr><button id="export">Exportar dados JSON</button> <button id="reset">Limpar demo</button><p class="info">Salvamento automático neste navegador via localStorage. Não sincroniza com outros dispositivos.</p></aside><!-- Sobreponho mapa, rotas, marcadores, zoom e informações de posição. -->
-<section id="viewport"><div id="quick"><button id="togglePanel" title="Ferramentas">☰</button><button id="markerTool" title="Adicionar marcador">📍</button><button id="routeTool" title="Iniciar ou finalizar rota">〰</button></div><div id="context"><button id="ctxMarker">📍 Adicionar marcador aqui</button><button id="ctxRoute">〰 Adicionar ponto à rota</button><button id="ctxCopy">⧉ Copiar coordenadas</button></div><div id="world"><img id="baseMap" alt="Mapa escolhido localmente" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none"><svg id="lines" viewBox="0 0 800 800" preserveAspectRatio="none"></svg><div id="markers"></div></div><div id="toolbar"><button id="plus" aria-label="Aproximar">＋</button><button id="minus" aria-label="Afastar">－</button><button id="home">⌂</button></div><div id="notice">Imagem opcional carregada localmente. Calibração imagem ↔ GPS ainda pendente.</div><div id="status">X: — | Z: —</div></section></main><!-- Executo a lógica local do editor sem backend nem sincronização. -->
+:root {
+  font-family:Inter,system-ui,Arial;
+  background:#191b20;
+  color:#e5e8ef
+}
+* {
+  box-sizing:border-box
+}
+body {
+  margin:0
+}
+/* Organizo o cabeçalho fixo e a área principal do editor. */
+header {
+  height:60px;
+  background:#22252c;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+  border-bottom:1px solid #373a44
+}
+header strong {
+  color:#a5bde9
+}
+small,.muted {
+  color:#aab0bf
+}
+main {
+  display:flex;
+  height:calc(100vh - 60px);
+  min-height:500px;
+  position:relative
+}
+/* Reservo o painel lateral para camadas, marcadores e ferramentas. */
+aside {
+  width:310px;
+  flex:none;
+  padding:18px;
+  background:#23262e;
+  overflow:auto;
+  border-right:1px solid #3c404b
+}
+h2 {
+  font-size:14px;
+  letter-spacing:.09em;
+  color:#b9c8e7;
+  text-transform:uppercase;
+  margin:22px 0 12px
+}
+label {
+  display:block;
+  font-size:12px;
+  color:#b9c1d1;
+  margin:10px 0 5px
+}
+input,select,button {
+  background:#303541;
+  border:1px solid #4a5161;
+  color:#eef1f7;
+  border-radius:7px;
+  padding:10px;
+  font:inherit;
+  font-size:13px
+}
+input,select {
+  width:100%
+}
+button {
+  cursor:pointer
+}
+button:hover {
+  background:#414a5e
+}
+input[type=color] {
+  height:38px;
+  padding:3px;
+  min-width:55px
+}
+.edit-item {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin:6px 0;
+  padding:6px;
+  border:1px solid #404652;
+  border-radius:7px;
+  font-size:12px
+}
+.edit-item .label {
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap
+}
+.edit-item input[type=color] {
+  width:52px;
+  flex:none
+}
+.edit-item button {
+  padding:6px
+}
+.primary {
+  background:#3b567f;
+  border-color:#597fb1
+}
+.row {
+  display:flex;
+  gap:8px
+}
+.row>* {
+  flex:1;
+  min-width:0
+}
+.layer {
+  display:flex;
+  align-items:center;
+  gap:9px;
+  border:1px solid #404652;
+  padding:8px;
+  border-radius:8px;
+  margin-bottom:8px;
+  font-size:13px
+}
+.layer input {
+  width:auto
+}
+.layer .name {
+  flex:1;
+  overflow:hidden;
+  text-overflow:ellipsis
+}
+.layer .delete {
+  flex:0;
+  padding:4px 8px
+}
+/* Faço a janela do mapa aceitar arrasto e gestos de toque. */
+#viewport {
+  position:relative;
+  flex:1;
+  overflow:hidden;
+  background:#121419;
+  cursor:grab;
+  touch-action:none
+}
+#viewport.dragging {
+  cursor:grabbing
+}
+/* Desenho uma grade ilustrativa; ela não equivale a cartografia calibrada. */
+#world {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:800px;
+  height:800px;
+  transform-origin:center center;
+  background-color:#282e37;
+  background-image:linear-gradient(#e4eff318 1px,transparent 1px),linear-gradient(90deg,#e4eff318 1px,transparent 1px),radial-gradient(circle at 60% 35%,#40515a33,transparent 40%);
+  background-size:52.08333px 52.08333px,52.08333px 52.08333px,100% 100%;
+  border:2px solid #8298ad;
+  box-shadow:0 10px 80px #0009;
+  user-select:none
+}
+#world.has-map:before {
+  display:none
+}
+#world.has-map {
+  background-image:none
+}
+#world:before {
+  content:'GRADE DE TESTE — NÃO É UM MAPA CALIBRADO DE CHERNARUS';
+  position:absolute;
+  top:20px;
+  left:12%;
+  width:76%;
+  color:#e9c99d;
+  text-align:center;
+  font-size:12px;
+  letter-spacing:.07em;
+  pointer-events:none
+}
+/* Sobreponho rotas e marcadores ao fundo sem interceptar cliques da grade. */
+#markers,#lines {
+  position:absolute;
+  inset:0;
+  overflow:visible;
+  pointer-events:none
+}
+#baseMap {
+  z-index:0
+}
+#lines {
+  z-index:1
+}
+#markers {
+  z-index:2
+}
+/* Posiciono os marcadores no plano e mantenho seus rótulos no hover. */
+.pin {
+  position:absolute;
+  transform:translate(-50%,-100%);
+  border:1px solid #d7dde6;
+  border-radius:30px;
+  background:#1b2535e8;
+  color:#fff;
+  min-width:30px;
+  height:30px;
+  padding:4px 8px;
+  text-align:center;
+  line-height:20px;
+  cursor:pointer;
+  box-shadow:0 4px 8px #0008
+}
+.pin:hover {
+  outline:2px solid #a9badc
+}
+.pin span {
+  display:none;
+  position:absolute;
+  left:50%;
+  bottom:35px;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  background:#111922;
+  padding:6px 9px;
+  border-radius:6px
+}
+.pin:hover span {
+  display:block
+}
+#toolbar {
+  position:absolute;
+  right:16px;
+  top:16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px
+}
+#status {
+  position:absolute;
+  bottom:15px;
+  right:15px;
+  background:#171b24de;
+  border:1px solid #505866;
+  padding:10px;
+  border-radius:8px;
+  font-size:13px
+}
+#notice {
+  position:absolute;
+  bottom:15px;
+  left:15px;
+  font-size:12px;
+  max-width:440px;
+  background:#171b24d9;
+  padding:10px;
+  border-radius:8px;
+  color:#ddd
+}
+.dot {
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+  background:#81a4cf
+}
+.info {
+  font-size:12px;
+  line-height:1.5;
+  color:#aeb9cb
+}
+.tiny {
+  padding:6px
+}
+hr {
+  border:0;
+  border-top:1px solid #373b45;
+  margin:18px 0
+}
+/* Adapto o layout às telas estreitas. */
+@media(max-width:760px) {
+  main {
+    flex-direction:column
+  }
+  aside {
+    width:100%;
+    height:45vh
+  }
+  #viewport {
+    min-height:55vh
+  }
+  header {
+    padding:0 10px
+  }
+}
+#quick {
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:10;
+  display:flex;
+  gap:6px
+}
+#quick button {
+  background:#1b2434e8;
+  box-shadow:0 3px 9px #0009
+}
+#context {
+  display:none;
+  position:absolute;
+  z-index:30;
+  background:#202631ee;
+  border:1px solid #536079;
+  border-radius:10px;
+  padding:6px;
+  box-shadow:0 8px 24px #0009;
+  min-width:185px
+}
+#context button {
+  display:block;
+  width:100%;
+  text-align:left;
+  border:0;
+  background:transparent
+}
+#context button:hover {
+  background:#38465c
+}
+main.compact aside {
+  display:none
+}
+main.compact #viewport {
+  width:100%
+}
+@media(max-width:760px) {
+  #quick {
+    top:8px;
+    left:8px
+  }
+}
+.pin {
+  width:34px;
+  height:44px;
+  min-width:0;
+  padding:0;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent!important
+}
+.pin svg {
+  width:34px;
+  height:44px;
+  filter:drop-shadow(0 4px 3px #0009)
+}
+.pin span {
+  bottom:46px
+}
+#palette {
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:5px;
+  margin:8px 0
+}
+#palette button {
+  height:28px;
+  padding:0;
+  border:2px solid transparent
+}
+#palette button.active {
+  border-color:white
+}
+/* As regras seguintes refinam a barra rápida, o menu contextual e os ícones SVG. */
+</style>
+</head>
+<body>
+<!-- Identifico a versão do protótipo e aviso que o mapa é de ensaio. -->
+<header>
+<div>
+<strong>DAYZ / TACTICAL MAP</strong> <small>— protótipo 0.5.1</small>
+</div>
+<small>CHERNARUS · grade de ensaio</small>
+</header>
+<main id="layout" class="compact">
+<!-- Reúno as ferramentas de edição no painel lateral. -->
+<aside>
+<div class="info">Protótipo local para validar a interface. A grade usa uma escala <b>ilustrativa</b> de 0–15360 nos dois eixos; <b>não utilize os valores para navegar no jogo</b> até calibrarmos a cartografia.</div>
+<h2>Imagem de Chernarus (prévia)</h2>
+<input type="file" accept="image/png,image/jpeg,image/webp" id="mapFile">
+<button id="clearMap" style="margin-top:6px;width:100%">Voltar à grade de teste</button>
+<p class="info">Selecione uma imagem do mapa no seu computador. Ela será exibida apenas neste navegador e não será enviada ao GitHub. Posição e escala da imagem ainda não estão calibradas: não use para navegação real.</p>
+<h2>Localizar coordenadas</h2>
+<div class="row">
+<div>
+<label for="x">X → direita (teste)</label>
+<input type="number" id="x" min="0" max="15360" value="7680">
+</div>
+<div>
+<label for="y">Y ↓ baixo (teste)</label>
+<input type="number" id="y" min="0" max="15360" value="7680">
+</div>
+</div>
+<button class="primary" style="margin-top:8px;width:100%" id="go">Centralizar posição</button>
+<h2>Camadas</h2>
+<div id="layers">
+</div>
+<div class="row">
+<input id="newLayer" placeholder="Nome da camada" maxlength="32">
+<button id="addLayer" aria-label="Criar camada">+ Criar</button>
+</div>
+<p class="info">As camadas são locais neste protótipo. Ainda não há senhas, usuários ou compartilhamento seguro.</p>
+<h2>Novo marcador</h2>
+<label for="markerName">Nome</label>
+<input id="markerName" placeholder="Ex.: Barril escondido" maxlength="80">
+<div class="row">
+<div>
+<label for="icon">Ícone</label>
+<select id="icon">
+<option value="home">Casa</option>
+<option value="player">Jogador</option>
+<option value="car">Carro</option>
+<option value="motorcycle">Moto</option>
+<option value="target">Alvo</option>
+<option value="supply">Suprimentos</option>
+<option value="water">Água</option>
+<option value="warning">Perigo</option>
+<option value="meet">Encontro</option>
+<option value="pin">Localização</option>
+</select>
+</div>
+<div>
+<label for="targetLayer">Camada</label>
+<select id="targetLayer">
+</select>
+</div>
+</div>
+<label>Paleta (10 cores)</label>
+<div id="palette">
+</div>
+<div class="row" style="display:none">
+<div>
+<label for="markerBorder">Cor da borda</label>
+<input type="color" id="markerBorder" value="#d7dde6">
+</div>
+<div>
+<label for="markerBg">Fundo do ícone</label>
+<input type="color" id="markerBg" value="#1b2535">
+</div>
+</div>
+<button class="primary" style="width:100%;margin-top:10px" id="addMarker">Adicionar nas coordenadas</button>
+<p class="info">Clique no mapa para capturar a posição do próximo marcador. Coordenadas ainda ilustrativas.</p>
+<div id="markerEditors">
+</div>
+<h2>Rotas</h2>
+<div class="row">
+<div>
+<label for="routeColor">Cor da linha</label>
+<input type="color" id="routeColor" value="#96badd">
+</div>
+<div>
+<label for="routeWidth">Espessura</label>
+<input type="number" min="1" max="12" id="routeWidth" value="1">
+</div>
+</div>
+<button id="route">Começar rota (clique no mapa)</button> <button id="endRoute">Finalizar rota</button>
+<p class="info">Clique no mapa para adicionar pontos à rota. Os pontos ficam na camada selecionada.</p>
+<div id="routeEditors">
+</div>
+<hr>
+<button id="export">Exportar dados JSON</button> <button id="reset">Limpar demo</button>
+<p class="info">Salvamento automático neste navegador via localStorage. Não sincroniza com outros dispositivos.</p>
+</aside>
+<!-- Sobreponho mapa, rotas, marcadores, zoom e informações de posição. -->
+<section id="viewport">
+<div id="quick">
+<button id="togglePanel" title="Ferramentas">☰</button>
+<button id="markerTool" title="Adicionar marcador">📍</button>
+<button id="routeTool" title="Iniciar ou finalizar rota">〰</button>
+</div>
+<div id="context">
+<button id="ctxMarker">📍 Adicionar marcador aqui</button>
+<button id="ctxRoute">〰 Adicionar ponto à rota</button>
+<button id="ctxCopy">⧉ Copiar coordenadas</button>
+</div>
+<div id="world">
+<img id="baseMap" alt="Mapa escolhido localmente" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none">
+<svg id="lines" viewBox="0 0 800 800" preserveAspectRatio="none">
+</svg>
+<div id="markers">
+</div>
+</div>
+<div id="toolbar">
+<button id="plus" aria-label="Aproximar">＋</button>
+<button id="minus" aria-label="Afastar">－</button>
+<button id="home">⌂</button>
+</div>
+<div id="notice">Imagem opcional carregada localmente. Calibração imagem ↔ GPS ainda pendente.</div>
+<div id="status">X: — | Z: —</div>
+</section>
+</main>
+<!-- Executo a lógica local do editor sem backend nem sincronização. -->
 <script>
 // Centralizo o acesso aos elementos e defino a escala ilustrativa da grade.
 const $=id=>document.getElementById(id), MAX=15360, SIZE=800, key='dayz-map-proto-01';
+
 // Recupero os dados locais; inicio camadas padrão quando não existe estado válido.
-let state;try{state=JSON.parse(localStorage.getItem(key))}catch{};if(!state||!Array.isArray(state.layers))state={layers:[{id:'private',name:'Privado',visible:true},{id:'team',name:'Esquadrão (simulado)',visible:true}],markers:[],routes:[]};
+let state;
+try{state=JSON.parse(localStorage.getItem(key))}catch{};
+if(!state||!Array.isArray(state.layers))state={layers:[{id:'private',name:'Privado',visible:true},{id:'team',name:'Esquadrão (simulado)',visible:true}],markers:[],routes:[]};
+
 // Guardo zoom, deslocamento, gesto de arrasto, rota temporária e imagem carregada.
 let scale=1,tx=0,ty=0,drag=null,routeDraft=null,mapUrl=null,contextPoint=null;
+
 // Preservo as posições na tela dos marcadores criados antes da inversão do eixo.
-if(!state.yDownMigrated){for(const m of state.markers||[])m.z=MAX-m.z;for(const r of state.routes||[])for(const p of r.points||[])p.z=MAX-p.z;state.yDownMigrated=true;localStorage.setItem(key,JSON.stringify(state))}
+if(!state.yDownMigrated){for(const m of state.markers||[])m.z=MAX-m.z;
+for(const r of state.routes||[])for(const p of r.points||[])p.z=MAX-p.z;
+state.yDownMigrated=true;
+localStorage.setItem(key,JSON.stringify(state))}
 
 // Limito a paleta às dez cores disponíveis na interface.
 const PALETTE=['#FF0000','#00FF00','#0000FF','#00FFFF','#FF00FF','#FFFF00','#FF8000','#8000FF','#FFFFFF','#A0A0A0'];
+
 // Descrevo os desenhos vetoriais de cada tipo de marcador.
-const SHAPES={"home":"<path d=\"M7 17L17 9l10 8M10 17v11h14V17M15 28v-8h5v8\"/>","player":"<circle cx=\"17\" cy=\"12\" r=\"4\"/><path d=\"M9 28v-7q0-5 8-5t8 5v7\"/>","car":"<path d=\"M7 24l3-10h14l3 10v4H7zM8 22h18M12 14l2-4h6l2 4\"/>","motorcycle":"<circle cx=\"9\" cy=\"25\" r=\"4\"/><circle cx=\"25\" cy=\"25\" r=\"4\"/><path d=\"M9 25l5-9 5 9h6l-4-11h-4\"/>","target":"<circle cx=\"17\" cy=\"19\" r=\"10\"/><circle cx=\"17\" cy=\"19\" r=\"5\"/><path d=\"M17 6v8m0 10v8M4 19h8m10 0h8\"/>","supply":"<rect x=\"8\" y=\"11\" width=\"18\" height=\"17\" rx=\"1\"/><path d=\"M8 16h18M17 11v17\"/>","water":"<path d=\"M17 7C13 13 9 17 9 22a8 8 0 0 0 16 0c0-5-4-9-8-15z\"/>","warning":"<path d=\"M17 7L30 29H4zM17 15v7m0 4v1\"/>","meet":"<circle cx=\"11\" cy=\"14\" r=\"4\"/><circle cx=\"23\" cy=\"14\" r=\"4\"/><path d=\"M3 28v-5q0-5 8-5t8 5v5M18 22q1-4 5-4 8 0 8 5v5\"/>","pin":"<circle cx=\"17\" cy=\"18\" r=\"8\"/><path d=\"M17 5v5m0 15v5M4 18h5m16 0h5\"/>"};
+const SHAPES={"home":"<path d=\"M7 17L17 9l10 8M10 17v11h14V17M15 28v-8h5v8\"/>","player":"<circle cx=\"17\" cy=\"12\" r=\"4\"/>
+<path d=\"M9 28v-7q0-5 8-5t8 5v7\"/>","car":"<path d=\"M7 24l3-10h14l3 10v4H7zM8 22h18M12 14l2-4h6l2 4\"/>","motorcycle":"<circle cx=\"9\" cy=\"25\" r=\"4\"/>
+<circle cx=\"25\" cy=\"25\" r=\"4\"/>
+<path d=\"M9 25l5-9 5 9h6l-4-11h-4\"/>","target":"<circle cx=\"17\" cy=\"19\" r=\"10\"/>
+<circle cx=\"17\" cy=\"19\" r=\"5\"/>
+<path d=\"M17 6v8m0 10v8M4 19h8m10 0h8\"/>","supply":"<rect x=\"8\" y=\"11\" width=\"18\" height=\"17\" rx=\"1\"/>
+<path d=\"M8 16h18M17 11v17\"/>","water":"<path d=\"M17 7C13 13 9 17 9 22a8 8 0 0 0 16 0c0-5-4-9-8-15z\"/>","warning":"<path d=\"M17 7L30 29H4zM17 15v7m0 4v1\"/>","meet":"<circle cx=\"11\" cy=\"14\" r=\"4\"/>
+<circle cx=\"23\" cy=\"14\" r=\"4\"/>
+<path d=\"M3 28v-5q0-5 8-5t8 5v5M18 22q1-4 5-4 8 0 8 5v5\"/>","pin":"<circle cx=\"17\" cy=\"18\" r=\"8\"/>
+<path d=\"M17 5v5m0 15v5M4 18h5m16 0h5\"/>"};
+
 // Converto ícones antigos para os tipos atuais quando necessário.
 const OLD={'📍':'pin','🚙':'car','🏠':'home','📦':'supply','⚠️':'warning','👤':'player'};
+
 // Guardo a cor escolhida para os próximos marcadores.
 let markerColor='#FFFFFF';
+
 // Produzo o SVG do marcador com a cor validada na paleta.
-function pinSVG(type,color){const shape=SHAPES[type]||SHAPES[OLD[type]]||SHAPES.pin;const c=PALETTE.includes(color)?color:'#FFFFFF';return '<svg viewBox="0 0 34 46" aria-hidden="true"><path d="M17 1C8 1 2 8 2 17c0 12 15 27 15 27s15-15 15-27C32 8 26 1 17 1z" fill="#1b2535" stroke="'+c+'" stroke-width="2"/><g fill="none" stroke="'+c+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+shape+'</g></svg>'}
+function pinSVG(type,color){const shape=SHAPES[type]||SHAPES[OLD[type]]||SHAPES.pin;
+const c=PALETTE.includes(color)?color:'#FFFFFF';
+return '<svg viewBox="0 0 34 46" aria-hidden="true">
+<path d="M17 1C8 1 2 8 2 17c0 12 15 27 15 27s15-15 15-27C32 8 26 1 17 1z" fill="#1b2535" stroke="'+c+'" stroke-width="2"/>
+<g fill="none" stroke="'+c+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+shape+'</g>
+</svg>'}
 // Refaço os botões da paleta e atualizo a seleção ativa.
-function renderPalette(){$('palette').innerHTML=PALETTE.map(c=>'<button type="button" class="'+(c===markerColor?'active':'')+'" style="background:'+c+'" title="'+c+'" data-color="'+c+'"></button>').join('');$('palette').querySelectorAll('button').forEach(b=>b.onclick=()=>{markerColor=b.dataset.color;$('markerBorder').value=markerColor;renderPalette()})}
+function renderPalette(){$('palette').innerHTML=PALETTE.map(c=>'<button type="button" class="'+(c===markerColor?'active':'')+'" style="background:'+c+'" title="'+c+'" data-color="'+c+'">
+</button>').join('');
+$('palette').querySelectorAll('button').forEach(b=>b.onclick=()=>{markerColor=b.dataset.color;$('markerBorder').value=markerColor;renderPalette()})}
 // Persisto o estado no navegador e escapo texto antes de inseri-lo em HTML.
 function save(){localStorage.setItem(key,JSON.stringify(state))}function esc(t){return String(t).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]))}function currentLayer(){return $('targetLayer').value||state.layers[0]?.id}
 // Reconstruo as camadas, visibilidade, seleção e exclusão associada.
-function renderLayers(){const sel=currentLayer();$('layers').innerHTML=state.layers.map(l=>`<div class="layer"><input type="checkbox" data-toggle="${esc(l.id)}" ${l.visible?'checked':''} aria-label="Exibir ${esc(l.name)}"><span class="name">${esc(l.name)}</span>${l.id==='private'?'<small>local</small>':`<button class="delete" data-remove="${esc(l.id)}" title="Remover camada">×</button>`}</div>`).join('');$('targetLayer').innerHTML=state.layers.map(l=>`<option value="${esc(l.id)}" ${l.id===sel?'selected':''}>${esc(l.name)}</option>`).join('');$('layers').querySelectorAll('[data-toggle]').forEach(el=>el.onchange=()=>{state.layers.find(l=>l.id===el.dataset.toggle).visible=el.checked;save();renderMap()});$('layers').querySelectorAll('[data-remove]').forEach(el=>el.onclick=()=>{if(!confirm('Excluir camada e todos os seus marcadores e rotas?'))return;state.layers=state.layers.filter(l=>l.id!==el.dataset.remove);state.markers=state.markers.filter(m=>m.layer!==el.dataset.remove);state.routes=state.routes.filter(r=>r.layer!==el.dataset.remove);save();renderLayers();renderMap()})}
+function renderLayers(){const sel=currentLayer();$('layers').innerHTML=state.layers.map(l=>`<div class="layer">
+<input type="checkbox" data-toggle="${esc(l.id)}" ${l.visible?'checked':''} aria-label="Exibir ${esc(l.name)}">
+<span class="name">${esc(l.name)}</span>${l.id==='private'?'<small>local</small>':`<button class="delete" data-remove="${esc(l.id)}" title="Remover camada">×</button>`}</div>`).join('');$('targetLayer').innerHTML=state.layers.map(l=>`<option value="${esc(l.id)}" ${l.id===sel?'selected':''}>${esc(l.name)}</option>`).join('');$('layers').querySelectorAll('[data-toggle]').forEach(el=>el.onchange=()=>{state.layers.find(l=>l.id===el.dataset.toggle).visible=el.checked;save();renderMap()});$('layers').querySelectorAll('[data-remove]').forEach(el=>el.onclick=()=>{if(!confirm('Excluir camada e todos os seus marcadores e rotas?'))return;state.layers=state.layers.filter(l=>l.id!==el.dataset.remove);state.markers=state.markers.filter(m=>m.layer!==el.dataset.remove);state.routes=state.routes.filter(r=>r.layer!==el.dataset.remove);save();renderLayers();renderMap()})}
 // Converto coordenadas da grade em pixels; limito a conversão inversa aos extremos.
 function pixel(x,z){return{x:x/MAX*SIZE,y:z/MAX*SIZE}}function coord(x,y){return{x:Math.round(Math.max(0,Math.min(MAX,x/SIZE*MAX))),z:Math.round(Math.max(0,Math.min(MAX,y/SIZE*MAX)))}}function worldPos(e){const r=$('world').getBoundingClientRect();return{x:(e.clientX-r.left)/scale,y:(e.clientY-r.top)/scale}}
 // Carrego a imagem localmente via URL temporária; não envio arquivos a servidor.
@@ -47,7 +571,17 @@ $('mapFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)ret
 // Aplico zoom e deslocamento ao mundo e compenso a escala dos ícones.
 function transform(){$('markers').querySelectorAll('.pin').forEach(e=>e.style.transform='scale('+(1/scale)+')');$('world').style.transform=`translate(calc(-50% + ${tx}px),calc(-50% + ${ty}px)) scale(${scale})`}function visible(layer){return state.layers.some(l=>l.id===layer&&l.visible)}
 // Desenho controles para editar cores, espessuras e excluir elementos.
-function renderEditors(){const me=$('markerEditors'),re=$('routeEditors');me.innerHTML=state.markers.map(m=>`<div class="edit-item"><span class="label" title="${esc(m.name)}">${esc(m.icon)} ${esc(m.name)}</span><input type="color" aria-label="Borda do marcador" data-mborder="${esc(m.id)}" value="${esc(m.borderColor||'#d7dde6')}"><input type="color" aria-label="Fundo do marcador" data-mbg="${esc(m.id)}" value="${esc(m.bgColor||'#1b2535')}"><button data-mdel="${esc(m.id)}" title="Excluir marcador">×</button></div>`).join('');re.innerHTML=state.routes.map((r,i)=>`<div class="edit-item"><span class="label">Rota ${i+1}</span><input type="color" aria-label="Cor da rota" data-rcolor="${esc(r.id)}" value="${esc(r.color||'#96badd')}"><input type="number" style="width:53px" min="1" max="12" title="Espessura" data-rwidth="${esc(r.id)}" value="${Math.max(1,Math.min(12,Number(r.width)||1))}"><button data-rdel="${esc(r.id)}" title="Excluir rota">×</button></div>`).join('');me.querySelectorAll('[data-mborder],[data-mbg]').forEach(el=>el.oninput=()=>{let m=state.markers.find(m=>m.id===(el.dataset.mborder||el.dataset.mbg));if(!m)return;m[el.dataset.mborder?'borderColor':'bgColor']=el.value;save();renderMap()});re.querySelectorAll('[data-rcolor],[data-rwidth]').forEach(el=>el.oninput=()=>{let r=state.routes.find(r=>r.id===(el.dataset.rcolor||el.dataset.rwidth));if(!r)return;r[el.dataset.rcolor?'color':'width']=el.dataset.rwidth?Math.max(1,Math.min(12,Number(el.value)||1)):el.value;save();renderMap();});me.querySelectorAll('[data-mdel]').forEach(el=>el.onclick=()=>{if(!confirm('Excluir marcador?'))return;state.markers=state.markers.filter(m=>m.id!==el.dataset.mdel);save();renderMap()});re.querySelectorAll('[data-rdel]').forEach(el=>el.onclick=()=>{if(!confirm('Excluir rota?'))return;state.routes=state.routes.filter(r=>r.id!==el.dataset.rdel);save();renderMap()})}
+function renderEditors(){const me=$('markerEditors'),re=$('routeEditors');me.innerHTML=state.markers.map(m=>`<div class="edit-item">
+<span class="label" title="${esc(m.name)}">${esc(m.icon)} ${esc(m.name)}</span>
+<input type="color" aria-label="Borda do marcador" data-mborder="${esc(m.id)}" value="${esc(m.borderColor||'#d7dde6')}">
+<input type="color" aria-label="Fundo do marcador" data-mbg="${esc(m.id)}" value="${esc(m.bgColor||'#1b2535')}">
+<button data-mdel="${esc(m.id)}" title="Excluir marcador">×</button>
+</div>`).join('');re.innerHTML=state.routes.map((r,i)=>`<div class="edit-item">
+<span class="label">Rota ${i+1}</span>
+<input type="color" aria-label="Cor da rota" data-rcolor="${esc(r.id)}" value="${esc(r.color||'#96badd')}">
+<input type="number" style="width:53px" min="1" max="12" title="Espessura" data-rwidth="${esc(r.id)}" value="${Math.max(1,Math.min(12,Number(r.width)||1))}">
+<button data-rdel="${esc(r.id)}" title="Excluir rota">×</button>
+</div>`).join('');me.querySelectorAll('[data-mborder],[data-mbg]').forEach(el=>el.oninput=()=>{let m=state.markers.find(m=>m.id===(el.dataset.mborder||el.dataset.mbg));if(!m)return;m[el.dataset.mborder?'borderColor':'bgColor']=el.value;save();renderMap()});re.querySelectorAll('[data-rcolor],[data-rwidth]').forEach(el=>el.oninput=()=>{let r=state.routes.find(r=>r.id===(el.dataset.rcolor||el.dataset.rwidth));if(!r)return;r[el.dataset.rcolor?'color':'width']=el.dataset.rwidth?Math.max(1,Math.min(12,Number(el.value)||1)):el.value;save();renderMap();});me.querySelectorAll('[data-mdel]').forEach(el=>el.onclick=()=>{if(!confirm('Excluir marcador?'))return;state.markers=state.markers.filter(m=>m.id!==el.dataset.mdel);save();renderMap()});re.querySelectorAll('[data-rdel]').forEach(el=>el.onclick=()=>{if(!confirm('Excluir rota?'))return;state.routes=state.routes.filter(r=>r.id!==el.dataset.rdel);save();renderMap()})}
 // Refaço marcadores e linhas de rota com base nas camadas visíveis.
 function renderMap(){$('markers').innerHTML='';state.markers.filter(m=>visible(m.layer)).forEach(m=>{const p=pixel(m.x,m.z),el=document.createElement('button');el.className='pin';el.style.left=p.x+'px';el.style.top=p.y+'px';el.innerHTML=pinSVG(m.icon,m.borderColor||'#FFFFFF')+'<span>'+esc(m.name)+' · '+m.x+', '+m.z+' (teste)</span>';el.title='Clique para selecionar as coordenadas: '+m.name;el.style.borderColor=m.borderColor||'#d7dde6';el.style.backgroundColor='transparent';el.style.marginLeft='-17px';el.style.marginTop='-44px';el.style.transformOrigin='50% 100%';el.style.transform='scale('+(1/scale)+')';el.onclick=e=>{e.stopPropagation();$('x').value=m.x;$('y').value=m.z;$('markerName').value=m.name;$('markerBorder').value=m.borderColor||'#d7dde6';$('markerBg').value=m.bgColor||'#1b2535';$('status').textContent=`X: ${m.x} | Z: ${m.z} (teste)`;};$('markers').appendChild(el)});let svg='';for(const r of [...state.routes,...(routeDraft?[routeDraft]:[])]){if(!visible(r.layer)||r.points.length<2)continue;svg+=`<polyline points="${r.points.map(p=>{let a=pixel(p.x,p.z);return a.x+','+a.y}).join(' ')}" fill="none" stroke="${esc(r.color||'#96badd')}" stroke-width="${Math.max(1,Math.min(12,Number(r.width)||1))}" stroke-linecap="round" stroke-linejoin="round"/>`} $('lines').innerHTML=svg;renderEditors()}
 // Adiciono camadas com identificadores únicos e salvo a alteração.
@@ -79,4 +613,6 @@ $('ctxCopy').onclick=async()=>{if(!contextPoint)return;try{await navigator.clipb
 $('markerTool').onclick=()=>{$('layout').classList.remove('compact');$('markerName').focus()};
 $('routeTool').onclick=()=>{(routeDraft?$('endRoute'):$('route')).click()};
 renderPalette();renderLayers();renderMap();transform();
-</script></body></html>
+</script>
+</body>
+</html>
